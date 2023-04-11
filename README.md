@@ -2,7 +2,7 @@
 
 -   [Secure User Authentication with Next.js, NextAuth.js, and AWS Cognito](https://evoila.com/de/blog/2023/03/07/secure-user-authentication-with-next-js-nextauth-js-and-aws-cognito-2/)
 
--   [Next 13](https://nextjs.org/docs)
+-   [Next 13](https://beta.nextjs.org/docs/installation)
 
 -   [next-auth](https://next-auth.js.org/getting-started/example)
 
@@ -91,36 +91,38 @@ Select your user pool, and on the overview, you'll see the 'User pool ID', somet
 
 In order to get the COGNITO_ID and COGNITO_SECRET, go to 'App integration', and scroll down to the bottom. There, on 'App client list', find your client name and click on it. On 'App client information' you'll see the 'Client ID', and you can show the 'Client secret'. Those are the COGNITO_CLIENT and COGNITO_SECRET respectively.
 
-We don't have a .env file yet, but once we create it in the upcoming steps, add this variables there, until it looks something like this:
-
-```bash
-# ~/.env
-COGNITO_CLIENT_ID=<Client ID>
-COGNITO_CLIENT_SECRET=<Client Secret>
-COGNITO_ISSUER=https://cognito-idp.eu-north-1.amazonaws.com/<User Pool ID>
-```
+We don't have a .env file yet, but once we create it in the upcoming steps, we will need this variables.
 
 ## Next 13 setup
 
--   [Next 13](https://nextjs.org/docs) installation
+-   [Next 13](https://beta.nextjs.org/docs/installation) installation
 
 ### Installation
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
-
-## Getting Started
-
-First, run the development server:
+To automatically create a new Next.js project using the app directory:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+npx create-next-app@latest --experimental-app
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+$ npx create-next-app@latest –experimental-app
+✔ What is your project named? … <your app name>
+✔ Would you like to use TypeScript with this project? … No / Yes
+✔ Would you like to use ESLint with this project? … No / Yes
+✔ Would you like to use `src/` directory with this project? … No / Yes
+✔ What import alias would you like configured? … @/*
+```
+
+The next step is to install all packages with npm install. As soon as this is done, start the app with npm run dev.
+
+```bash
+cd <your app>
+npm install
+npm run dev
+```
+
+After the installation is complete, visit http://localhost:3000 to view your application
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
@@ -128,19 +130,129 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Setting up NextAuth.js
 
-## Learn More
+Just install it with npm install next-auth.
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install next-auth
+```
 
--   [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
--   [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Create a folder named /auth inside pages/api. Inside the auth folder, create a file with the following name: […nextauth].ts (yes, square brackets!). Your path to that file should now look like this: pages/api/auth/[…nextauth].ts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```bash
+# ~/pages/api/auth/[…nextauth].ts
+import NextAuth from "next-auth";
+import CognitoProvider from "next-auth/providers/cognito";
+import { NextAuthOptions } from "next-auth";
 
-## Deploy on Vercel
+export const authOptions: NextAuthOptions = {
+    providers: [
+        CognitoProvider({
+            clientId: process.env.COGNITO_ID,
+            clientSecret: process.env.COGNITO_SECRET,
+            issuer: process.env.COGNITO_ISSUER,
+        }),
+    ],
+};
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+export default NextAuth(authOptions);
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Now TypeScript is complaining: Type 'undefined' is not assignable to type 'string'. for clientId and clientSecret. Let's fix that.
+
+Create a file named process.d.ts in the root folder of this project. Paste this code inside:
+
+```bash
+# ~/process.d.ts
+declare namespace NodeJS {
+  export interface ProcessEnv {
+    COGNITO_ID: string
+    COGNITO_SECRET: string
+  }
+}
+```
+
+This will tell TypeScript that our environment variables for COGNITO_CLIENT_ID and COGNITO_CLIENT_SECRETwill never be undefined. Speaking of which, it’s time to create them.
+
+In the root folder, create a file named '.env' and inside that file, you need to define the necessary variables:
+
+```bash
+# ~/.env
+COGNITO_ID = YOUR_CLIENT_ID
+COGNITO_SECRET = YOUR_CLIENT_SECRET
+COGNITO_ISSUER = https://cognito-idp.<REGION>.amazonaws.com/<USER_POOL_ID>
+```
+
+> NOTE: Make sure the .env is in .gitignore before pushing your code!
+
+## Implementing User Authentication
+
+First, create a new file inside app called providers.tsx and put the following code inside:
+
+```bash
+"use client";
+
+import { SessionProvider } from "next-auth/react";
+
+export default function Providers({ children }: { children: React.ReactNode }) {
+    return <SessionProvider>{children}</SessionProvider>;
+}
+```
+
+Since Next.js 13 uses server components as the default, you need to create this component as a client, so the SessionProvider can be used.
+
+Next up, it’s time to use that SessionProvider in the root layout under app/layout.tsx:
+
+```bash
+import "./globals.css";
+import Providers from "./providers";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <html lang="en">
+            {/* <head /> will contain the components returned by the nearest parent head.tsx.
+            Find out more at https://beta.nextjs.org/docs/api-reference/file-conventions/head */}
+            <head />
+            <body>
+                <Providers>{children}</Providers>
+            </body>
+        </html>
+    );
+}
+```
+
+With that in place, you can now make use of the useSession in any component that uses your root layout.
+
+### Example
+
+Create a new file under components/LoginButton.tsx and paste the following code in it:
+
+```bash
+"use client";
+
+import { useSession, signIn, signOut } from "next-auth/react";
+
+export default function Component() {
+    const { data: session } = useSession();
+
+    if (session && session.user) {
+        return (
+            <>
+                Signed in as {session.user.email} <br />
+                <button onClick={() => signOut()}>Sign out</button>
+            </>
+        );
+    }
+    return (
+        <>
+            Not signed in <br />
+            <button onClick={() => signIn()}>Sign in</button>
+        </>
+    );
+}
+```
+
+> The useSession() React Hook in the NextAuth.js client is the easiest way to check if someone is signed in.
+
+Put the LoginButton component anywhere in your home page and try it.

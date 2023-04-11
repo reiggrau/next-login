@@ -1,10 +1,10 @@
 "use client";
 
+import React from "react";
+
+import styles from "../app/page.module.css";
 import Image from "next/image";
 import { Inter } from "next/font/google";
-import styles from "../app/page.module.css";
-
-import React from "react";
 
 import { Session } from "next-auth";
 
