@@ -1,11 +1,52 @@
 .main {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     padding: 1rem 6rem;
     min-height: 100vh;
 }
+
+.header {
+    padding: 1rem 2rem;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    position: absolute;
+}
+
+.logoDiv {
+    display: flex;
+    flex-direction: column;
+}
+
+.logoDiv div {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    font-family: var(--font-mono);
+}
+
+.navbar {
+    width: min;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.LoginButton {
+    padding: 1rem 1.2rem;
+    border-radius: var(--border-radius);
+    background: rgba(var(--card-rgb), 0);
+    border: 1px solid rgba(var(--card-border-rgb), 0);
+    transition: background 200ms, border 200ms;
+}
+
+.LoginButton h2 {
+    font-weight: 500;
+    margin-bottom: 0.7rem;
+}
+
+/* */
 
 .description {
     display: inherit;
@@ -46,6 +87,13 @@
     max-width: 100%;
 }
 
+.flex {
+    display: flex;
+    justify-content: center;
+    width: var(--max-width);
+    max-width: 100%;
+}
+
 .card {
     padding: 1rem 1.2rem;
     border-radius: var(--border-radius);
@@ -70,12 +118,6 @@
     font-size: 0.9rem;
     line-height: 1.5;
     max-width: 34ch;
-}
-
-.navbar {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
 }
 
 .center {

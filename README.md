@@ -191,6 +191,7 @@ COGNITO_ISSUER = https://cognito-idp.<REGION>.amazonaws.com/<USER_POOL_ID>
 First, create a new file inside app called providers.tsx and put the following code inside:
 
 ```bash
+# ~/app/Providers.tsx
 "use client";
 
 import { SessionProvider } from "next-auth/react";
@@ -205,14 +206,13 @@ Since Next.js 13 uses server components as the default, you need to create this 
 Next up, it’s time to use that SessionProvider in the root layout under app/layout.tsx:
 
 ```bash
+# ~/app/layout.tsx
 import "./globals.css";
 import Providers from "./providers";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en">
-            {/* <head /> will contain the components returned by the nearest parent head.tsx.
-            Find out more at https://beta.nextjs.org/docs/api-reference/file-conventions/head */}
             <head />
             <body>
                 <Providers>{children}</Providers>
